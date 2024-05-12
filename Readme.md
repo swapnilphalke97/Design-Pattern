@@ -302,37 +302,49 @@ The Bridge pattern separates abstraction from implementation, allowing them to v
 
 ### Example
 ```java
-public interface Implementor {
-    void operationImpl();
-}
+[source](https://refactoring.guru/design-patterns/adapter)
+class RemoteControl is
+    protected field device: Device
+    constructor RemoteControl(device: Device) is
+        this.device = device
+    method togglePower() is
+        if (device.isEnabled()) then
+            device.disable()
+        else
+            device.enable()
+    method volumeDown() is
+        device.setVolume(device.getVolume() - 10)
+    method volumeUp() is
+        device.setVolume(device.getVolume() + 10)
+    method channelDown() is
+        device.setChannel(device.getChannel() - 1)
+    method channelUp() is
+        device.setChannel(device.getChannel() + 1)
 
-public abstract class Abstraction {
-    protected Implementor implementor;
+class AdvancedRemoteControl extends RemoteControl is
+    method mute() is
+        device.setVolume(0)
 
-    public Abstraction(Implementor implementor) {
-        this.implementor = implementor;
-    }
+interface Device is
+    method isEnabled()
+    method enable()
+    method disable()
+    method getVolume()
+    method setVolume(percent)
+    method getChannel()
+    method setChannel(channel)
 
-    public abstract void operation();
-}
 
-public class ConcreteImplementor implements Implementor {
-    @Override
-    public void operationImpl() {
-        // Implementation
-    }
-}
+class Tv implements Device is
 
-public class RefinedAbstraction extends Abstraction {
-    public RefinedAbstraction(Implementor implementor) {
-        super(implementor);
-    }
+class Radio implements Device is
+    
+tv = new Tv()
+remote = new RemoteControl(tv)
+remote.togglePower()
 
-    @Override
-    public void operation() {
-        implementor.operationImpl();
-    }
-}
+radio = new Radio()
+remote = new AdvancedRemoteControl(radio)
 ```
 
 ## Composite Pattern
