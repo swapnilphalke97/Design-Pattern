@@ -83,35 +83,88 @@ The Abstract Factory pattern provides an interface for creating families of rela
 
 ### Example
 ```java
-public interface AbstractFactory {
-    ProductA createProductA();
-    ProductB createProductB();
+interface Shape {
+    void draw();
 }
 
-public class ConcreteFactory1 implements AbstractFactory {
+// Concrete products
+class Circle implements Shape {
     @Override
-    public ProductA createProductA() {
-        return new ConcreteProductA1();
-    }
-
-    @Override
-    public ProductB createProductB() {
-        return new ConcreteProductB1();
+    public void draw() {
+        System.out.println("Drawing Circle");
     }
 }
 
-public class ConcreteFactory2 implements AbstractFactory {
+class Square implements Shape {
     @Override
-    public ProductA createProductA() {
-        return new ConcreteProductA2();
+    public void draw() {
+        System.out.println("Drawing Square");
+    }
+}
+// Abstract product B
+interface Color {
+    void fill();
+}
+
+// Concrete products
+class Red implements Color {
+    @Override
+    public void fill() {
+        System.out.println("Filling with Red color");
+    }
+}
+
+class Blue implements Color {
+    @Override
+    public void fill() {
+        System.out.println("Filling with Blue color");
+    }
+}
+interface AbstractFactory {
+    Shape createShape();
+    Color createColor();
+}
+
+// Concrete Factory A
+class ShapeFactory implements AbstractFactory {
+    @Override
+    public Shape createShape() {
+        return new Circle();
     }
 
     @Override
-    public ProductB createProductB() {
-        return new ConcreteProductB2();
+    public Color createColor() {
+        return new Red();
     }
 }
-````
+// Concrete Factory B
+class ColorFactory implements AbstractFactory {
+    @Override
+    public Shape createShape() {
+        return new Square();
+    }
+
+    @Override
+    public Color createColor() {
+        return new Blue();
+    }
+}
+
+// Client code
+public class Main {
+    public static void main(String[] args) {
+        AbstractFactory shapeFactory = new ShapeFactory();
+        Shape shape = shapeFactory.createShape();
+        shape.draw();
+
+        AbstractFactory colorFactory = new ColorFactory();
+        Color color = colorFactory.createColor();
+        color.fill();
+    }
+}
+
+
+```
 
 ## Builder Pattern
 
