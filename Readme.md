@@ -210,18 +210,40 @@ The Prototype pattern allows you to create new objects by cloning existing insta
 
 ### Example
 ```java
-public abstract class Prototype implements Cloneable {
+java
+// Prototype interface
+interface Prototype extends Cloneable {
+    Prototype clone();
+}
+
+// Concrete prototype class
+class ConcretePrototype implements Prototype {
+    private int number;
+
+    public ConcretePrototype(int number) {
+        this.number = number;
+    }
+
     @Override
-    public Prototype clone() throws CloneNotSupportedException {
-        return (Prototype) super.clone();
+    public Prototype clone() {
+        return new ConcretePrototype(this.number);
+    }
+
+    public int getNumber() {
+        return number;
     }
 }
+// Client code
+public class Main {
+    public static void main(String[] args) {
+        ConcretePrototype prototype = new ConcretePrototype(10);
+        ConcretePrototype clonedPrototype = (ConcretePrototype) prototype.clone();
 
-
-
-public class ConcretePrototype extends Prototype {
-    // Implementation
+        System.out.println("Original Prototype Number: " + prototype.getNumber());
+        System.out.println("Cloned Prototype Number: " + clonedPrototype.getNumber());
+    }
 }
+    
 ```
 # Structural Design Patterns in Java
 
@@ -234,28 +256,43 @@ The Adapter pattern allows incompatible interfaces to work together. It acts as 
 
 ### Example
 ```java
-public interface Target {
-    void request();
-}
+[source](https://refactoring.guru/design-patterns/adapter)
+class RoundHole is
+    constructor RoundHole(radius) { ... }
+    method getRadius() is
+    method fits(peg: RoundPeg) is
+        return this.getRadius() >= peg.getRadius()
 
-public class Adaptee {
-    public void specificRequest() {
-        // Adaptee's specific request
-    }
-}
+class RoundPeg is
+    constructor RoundPeg(radius) { ... }
+    method getRadius() is.
 
-public class Adapter implements Target {
-    private Adaptee adaptee;
+class SquarePeg is
+    constructor SquarePeg(width) { ... }
 
-    public Adapter(Adaptee adaptee) {
-        this.adaptee = adaptee;
-    }
+    method getWidth() is
 
-    @Override
-    public void request() {
-        adaptee.specificRequest();
-    }
-}
+class SquarePegAdapter extends RoundPeg is
+    private field peg: SquarePeg
+
+    constructor SquarePegAdapter(peg: SquarePeg) is
+        this.peg = peg
+
+    method getRadius() is
+        return peg.getWidth() * Math.sqrt(2) / 2
+
+hole = new RoundHole(5)
+rpeg = new RoundPeg(5)
+hole.fits(rpeg) 
+
+small_sqpeg = new SquarePeg(5)
+large_sqpeg = new SquarePeg(10)
+hole.fits(small_sqpeg) // (incompatible types)
+
+small_sqpeg_adapter = new SquarePegAdapter(small_sqpeg)
+large_sqpeg_adapter = new SquarePegAdapter(large_sqpeg)
+hole.fits(small_sqpeg_adapter) // true
+hole.fits(large_sqpeg_adapter) // false
 ```
 
 ## Bridge Pattern
