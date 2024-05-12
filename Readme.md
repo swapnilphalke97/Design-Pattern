@@ -30,28 +30,51 @@ The Factory Method pattern defines an interface for creating objects but allows 
 
 ### Example
 ```java
-public interface Product {
-    void doSomething();
+interface Shape {
+    void draw();
 }
 
-public class ConcreteProduct implements Product {
+// Concrete products
+class Rectangle implements Shape {
     @Override
-    public void doSomething() {
-        // Implementation
+    public void draw() {
+        System.out.println("Drawing a rectangle");
     }
 }
 
-public interface Creator {
-    Product createProduct();
-}
-
-public class ConcreteCreator implements Creator {
+class Circle implements Shape {
     @Override
-    public Product createProduct() {
-        return new ConcreteProduct();
+    public void draw() {
+        System.out.println("Drawing a circle");
+    }
+}
+// Factory class
+class ShapeFactory {
+    public Shape createShape(String type) {
+        if (type.equalsIgnoreCase("rectangle")) {
+            return new Rectangle();
+        } else if (type.equalsIgnoreCase("circle")) {
+            return new Circle();
+        }
+        return null;
+    }
+}
+// Client code
+public class Main {
+    public static void main(String[] args) {
+        ShapeFactory factory = new ShapeFactory();
+
+        // Create a rectangle
+        Shape rectangle = factory.createShape("rectangle");
+        rectangle.draw();
+
+        // Create a circle
+        Shape circle = factory.createShape("circle");
+        circle.draw();
     }
 }
 ```
+
 
 ## Abstract Factory Pattern
 
