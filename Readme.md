@@ -31,7 +31,6 @@ classDiagram
         - instance: Database
         - Database()
         + getInstance() Database
-        + query(sql)
     }
 ```
 
@@ -53,7 +52,7 @@ class Database {
 ### 2. Factory Method
 > **💡 The One-Liner:** "Let subclasses decide what to create."
 
-* **Day-to-day Example:** A Logistics company. The main office (Creator) takes delivery requests, but lets the specific department (Trucking vs. Shipping) decide *which* specific vehicle (Truck vs. Ship/Product) to dispatch.
+* **Day-to-day Example:** A Logistics company. The main office (Creator) takes delivery requests, but lets the specific department (Trucking vs. Shipping) decide *which* specific vehicle (Truck vs. Ship) to dispatch.
 * **✅ When to use:** When you don't know beforehand the exact types and dependencies of the objects your code should work with.
 * **❌ When NOT to use:** When the object creation process is simple and unlikely to change. It can unnecessarily complicate the code by adding many new subclasses.
 
@@ -62,29 +61,43 @@ class Database {
 
 ```mermaid
 classDiagram
+    class Transport {
+        <<interface>>
+        + deliver()
+    }
+    class Truck {
+        + deliver()
+    }
     class Logistics {
         <<abstract>>
-        + createTransport() Transport
+        + planDelivery()
+        # createTransport() Transport*
     }
     class RoadLogistics {
-        + createTransport() Transport
+        # createTransport() Transport
     }
+    Transport <|.. Truck
     Logistics <|-- RoadLogistics
-    RoadLogistics ..> Truck : Creates
+    RoadLogistics ..> Truck : creates
 ```
 
 ```java
+interface Transport { void deliver(); }
+class Truck implements Transport { 
+    public void deliver() { System.out.println("Truck delivering"); } 
+}
+
 abstract class Logistics {
     public void planDelivery() {
         Transport transport = createTransport();
         transport.deliver();
     }
-    public abstract Transport createTransport(); // Factory Method
+    protected abstract Transport createTransport(); // Factory Method
 }
 
 class RoadLogistics extends Logistics {
     @Override
-    public Transport createTransport() {
+    protected Transport createTransport() {
         return new Truck();
     }
 }
@@ -109,16 +122,25 @@ classDiagram
         + createCheckbox() Checkbox
     }
     class MacFactory {
-        + createButton() MacButton
+        + createButton() Button
+        + createCheckbox() Checkbox
     }
     class WinFactory {
-        + createButton() WinButton
+        + createButton() Button
+        + createCheckbox() Checkbox
     }
-    GUIFactory <|-- MacFactory
-    GUIFactory <|-- WinFactory
+    GUIFactory <|.. MacFactory
+    GUIFactory <|.. WinFactory
 ```
 
 ```java
+interface Button {}
+interface Checkbox {}
+class MacButton implements Button {}
+class MacCheckbox implements Checkbox {}
+class WinButton implements Button {}
+class WinCheckbox implements Checkbox {}
+
 interface GUIFactory {
     Button createButton();
     Checkbox createCheckbox();
@@ -148,19 +170,29 @@ class WinFactory implements GUIFactory {
 
 ```mermaid
 classDiagram
+    class Pizza {
+        - cheese: boolean
+        - pepperoni: boolean
+        + setCheese(boolean)
+        + setPepperoni(boolean)
+    }
     class PizzaBuilder {
-        + addCheese()
-        + addPepperoni()
-        + addCrust()
+        - pizza: Pizza
+        + addCheese() PizzaBuilder
+        + addPepperoni() PizzaBuilder
         + build() Pizza
     }
-    class Waiter {
-        + constructMargherita(builder)
-    }
-    Waiter --> PizzaBuilder
+    PizzaBuilder --> Pizza : builds
 ```
 
 ```java
+class Pizza {
+    private boolean cheese;
+    private boolean pepperoni;
+    public void setCheese(boolean cheese) { this.cheese = cheese; }
+    public void setPepperoni(boolean pepperoni) { this.pepperoni = pepperoni; }
+}
+
 class PizzaBuilder {
     private Pizza pizza = new Pizza();
     
@@ -186,14 +218,15 @@ class PizzaBuilder {
 
 ```mermaid
 classDiagram
-    class Prototype {
+    class Cloneable {
         <<interface>>
-        + clone() Prototype
     }
-    class ConcretePrototype {
-        + clone() Prototype
+    class Document {
+        + content: String
+        + formatting: String
+        + clone() Document
     }
-    Prototype <|-- ConcretePrototype
+    Cloneable <|.. Document
 ```
 
 ```java
@@ -232,19 +265,19 @@ class Document implements Cloneable {
 
 ```mermaid
 classDiagram
-    class Target {
+    class EuropeSocket {
         <<interface>>
-        + request()
+        + receive220V()
     }
-    class Adapter {
-        - adaptee : Adaptee
-        + request()
+    class USPlug {
+        + provide110V()
     }
-    class Adaptee {
-        + legacyRequest()
+    class PowerAdapter {
+        - usPlug : USPlug
+        + receive220V()
     }
-    Target <|-- Adapter
-    Adapter --> Adaptee
+    EuropeSocket <|.. PowerAdapter
+    PowerAdapter --> USPlug : Adapts
 ```
 
 ```java
@@ -281,15 +314,24 @@ class PowerAdapter implements EuropeSocket {
 
 ```mermaid
 classDiagram
-    class Shape {
-        - color : Color
-        + draw()
-    }
     class Color {
         <<interface>>
-        + fill()
+        + fill() String
     }
+    class Red {
+        + fill() String
+    }
+    class Shape {
+        <<abstract>>
+        # color : Color
+        + draw()*
+    }
+    class Circle {
+        + draw()
+    }
+    Color <|.. Red
     Shape o-- Color
+    Shape <|-- Circle
 ```
 
 ```java
@@ -321,20 +363,21 @@ class Circle extends Shape {
 
 ```mermaid
 classDiagram
-    class Component {
+    class FileSystemComponent {
         <<interface>>
-        + getSize()
+        + getSize() int
     }
     class File {
-        + getSize()
+        + getSize() int
     }
     class Directory {
-        - children: List~Component~
-        + getSize()
+        - children: List~FileSystemComponent~
+        + add(FileSystemComponent)
+        + getSize() int
     }
-    Component <|-- File
-    Component <|-- Directory
-    Directory o-- Component
+    FileSystemComponent <|.. File
+    FileSystemComponent <|.. Directory
+    Directory o-- FileSystemComponent
 ```
 
 ```java
@@ -348,7 +391,6 @@ class Directory implements FileSystemComponent {
     private List<FileSystemComponent> children = new ArrayList<>();
     
     public void add(FileSystemComponent c) { children.add(c); }
-    
     public int getSize() {
         return children.stream().mapToInt(FileSystemComponent::getSize).sum();
     }
@@ -370,18 +412,18 @@ class Directory implements FileSystemComponent {
 classDiagram
     class Text {
         <<interface>>
-        + format()
+        + format() String
     }
-    class BaseDecorator {
-        - wrappee: Text
-        + format()
+    class PlainText {
+        + format() String
     }
     class BoldDecorator {
-        + format()
+        - text: Text
+        + format() String
     }
-    Text <|-- BaseDecorator
-    BaseDecorator o-- Text
-    BaseDecorator <|-- BoldDecorator
+    Text <|.. PlainText
+    Text <|.. BoldDecorator
+    BoldDecorator o-- Text : Wraps
 ```
 
 ```java
@@ -392,7 +434,7 @@ class PlainText implements Text {
 }
 
 class BoldDecorator implements Text {
-    private Text text;
+    private Text text; // Wrapped object
     public BoldDecorator(Text t) { this.text = t; }
     
     public String format() { return "<b>" + text.format() + "</b>"; }
@@ -413,16 +455,26 @@ class BoldDecorator implements Text {
 
 ```mermaid
 classDiagram
-    class Facade {
-        + simplifyWorkflow()
+    class SmartHomeFacade {
+        + leaveHome()
     }
-    class SubsystemA
-    class SubsystemB
-    Facade --> SubsystemA
-    Facade --> SubsystemB
+    class Lights { + turnOffAll() }
+    class Thermostat { + setToEcoMode() }
+    class SecuritySystem { + arm() }
+    class GarageDoor { + close() }
+    
+    SmartHomeFacade --> Lights
+    SmartHomeFacade --> Thermostat
+    SmartHomeFacade --> SecuritySystem
+    SmartHomeFacade --> GarageDoor
 ```
 
 ```java
+class Lights { public void turnOffAll() {} }
+class Thermostat { public void setToEcoMode() {} }
+class SecuritySystem { public void arm() {} }
+class GarageDoor { public void close() {} }
+
 class SmartHomeFacade {
     public void leaveHome() {
         new Lights().turnOffAll();
@@ -448,14 +500,17 @@ class SmartHomeFacade {
 
 ```mermaid
 classDiagram
-    class FlyweightFactory {
-        + getFlyweight(sharedState)
+    class ParticleType {
+        - color: String
+        - textureData: byte[]
     }
-    class Flyweight {
-        - sharedState
-        + operation(uniqueState)
+    class Particle {
+        - x: int
+        - y: int
+        - speed: int
+        - type: ParticleType
     }
-    FlyweightFactory --> Flyweight
+    Particle --> ParticleType : Shares
 ```
 
 ```java
@@ -489,20 +544,20 @@ class Particle {
 
 ```mermaid
 classDiagram
-    class Subject {
+    class VideoLoader {
         <<interface>>
-        + request()
+        + load()
     }
-    class RealSubject {
-        + request()
+    class RealVideoLoader {
+        + load()
     }
-    class Proxy {
-        - realSubject: RealSubject
-        + request()
+    class ProxyVideoLoader {
+        - realVideo: RealVideoLoader
+        + load()
     }
-    Subject <|-- RealSubject
-    Subject <|-- Proxy
-    Proxy --> RealSubject
+    VideoLoader <|.. RealVideoLoader
+    VideoLoader <|.. ProxyVideoLoader
+    ProxyVideoLoader --> RealVideoLoader : Controls access
 ```
 
 ```java
@@ -542,15 +597,17 @@ class ProxyVideoLoader implements VideoLoader {
 
 ```mermaid
 classDiagram
-    class Handler {
-        - next: Handler
-        + setNext(h: Handler)
-        + handle(request)
+    class SupportHandler {
+        <<abstract>>
+        # next: SupportHandler
+        + setNext(SupportHandler)
+        + handle(String)*
     }
-    class ConcreteHandler {
-        + handle(request)
+    class L1Support {
+        + handle(String)
     }
-    Handler <|-- ConcreteHandler
+    SupportHandler <|-- L1Support
+    SupportHandler --> SupportHandler : next
 ```
 
 ```java
@@ -585,20 +642,17 @@ class L1Support extends SupportHandler {
 
 ```mermaid
 classDiagram
-    class Invoker {
-        - command: Command
-        + executeCommand()
-    }
     class Command {
         <<interface>>
         + execute()
+        + undo()
     }
-    class ConcreteCommand {
-        - receiver
+    class CopyCommand {
+        - backup: String
         + execute()
+        + undo()
     }
-    Invoker o-- Command
-    Command <|-- ConcreteCommand
+    Command <|.. CopyCommand
 ```
 
 ```java
@@ -606,6 +660,7 @@ interface Command { void execute(); void undo(); }
 
 class CopyCommand implements Command {
     private String backup;
+    
     public void execute() { backup = "copied text"; }
     public void undo() { backup = ""; }
 }
@@ -624,19 +679,20 @@ class CopyCommand implements Command {
 
 ```mermaid
 classDiagram
-    class Iterator {
+    class Iterable~User~ {
         <<interface>>
-        + getNext()
-        + hasMore()
+        + iterator() Iterator~User~
     }
-    class IterableCollection {
-        <<interface>>
-        + createIterator() Iterator
+    class UserCollection {
+        - users: List~User~
+        + iterator() Iterator~User~
     }
-    IterableCollection --> Iterator
+    Iterable~User~ <|.. UserCollection
 ```
 
 ```java
+class User {}
+
 class UserCollection implements Iterable<User> {
     private List<User> users = new ArrayList<>();
     
@@ -662,12 +718,12 @@ class UserCollection implements Iterable<User> {
 classDiagram
     class Mediator {
         <<interface>>
-        + notify(sender, event)
+        + notify(Object, String)
     }
-    class ComponentA
-    class ComponentB
-    ComponentA --> Mediator
-    ComponentB --> Mediator
+    class ChatRoomMediator {
+        + notify(Object, String)
+    }
+    Mediator <|.. ChatRoomMediator
 ```
 
 ```java
@@ -697,20 +753,15 @@ class ChatRoomMediator implements Mediator {
 
 ```mermaid
 classDiagram
-    class Originator {
-        - state
-        + save() Memento
-        + restore(m: Memento)
-    }
     class Memento {
-        - state
-        + getState()
+        + savedState: String
     }
-    class Caretaker {
-        - history: List~Memento~
+    class Editor {
+        - text: String
+        + save() Memento
+        + restore(Memento)
     }
-    Originator ..> Memento
-    Caretaker o-- Memento
+    Editor ..> Memento : creates
 ```
 
 ```java
@@ -722,6 +773,7 @@ class Memento {
 class Editor { 
     private String text;
     
+    public void setText(String text) { this.text = text; }
     public Memento save() { return new Memento(text); }
     public void restore(Memento memento) { this.text = memento.savedState; }
 }
@@ -740,14 +792,14 @@ class Editor {
 
 ```mermaid
 classDiagram
-    class Publisher {
-        - subscribers: List
-        + subscribe(s)
-        + notifySubscribers()
-    }
     class Subscriber {
         <<interface>>
-        + update(context)
+        + update(String)
+    }
+    class Publisher {
+        - subscribers: List~Subscriber~
+        + subscribe(Subscriber)
+        + notifySubscribers(String)
     }
     Publisher o-- Subscriber
 ```
@@ -779,16 +831,24 @@ class Publisher {
 
 ```mermaid
 classDiagram
-    class Context {
-        - state: State
-        + changeState(s)
-        + request()
-    }
     class State {
         <<interface>>
-        + handle()
+        + pressButton(Phone)
     }
-    Context o-- State
+    class LockedState {
+        + pressButton(Phone)
+    }
+    class UnlockedState {
+        + pressButton(Phone)
+    }
+    class Phone {
+        - state: State
+        + setState(State)
+        + buttonPressed()
+    }
+    State <|.. LockedState
+    State <|.. UnlockedState
+    Phone o-- State
 ```
 
 ```java
@@ -796,6 +856,9 @@ interface State { void pressButton(Phone phone); }
 
 class LockedState implements State {
     public void pressButton(Phone phone) { phone.setState(new UnlockedState()); }
+}
+class UnlockedState implements State {
+    public void pressButton(Phone phone) { phone.setState(new LockedState()); }
 }
 
 class Phone {
@@ -819,16 +882,22 @@ class Phone {
 
 ```mermaid
 classDiagram
-    class Context {
-        - strategy: Strategy
-        + setStrategy(s)
-        + executeStrategy()
-    }
-    class Strategy {
+    class PaymentStrategy {
         <<interface>>
-        + execute(data)
+        + pay(int)
     }
-    Context o-- Strategy
+    class CreditCardStrategy {
+        + pay(int)
+    }
+    class PaypalStrategy {
+        + pay(int)
+    }
+    class ShoppingCart {
+        + checkout(int, PaymentStrategy)
+    }
+    PaymentStrategy <|.. CreditCardStrategy
+    PaymentStrategy <|.. PaypalStrategy
+    ShoppingCart ..> PaymentStrategy
 ```
 
 ```java
@@ -861,15 +930,17 @@ class ShoppingCart {
 
 ```mermaid
 classDiagram
-    class AbstractClass {
-        + templateMethod()
-        + step1()
-        + step2()*
+    class Builder {
+        <<abstract>>
+        + buildHouse()
+        - buildFoundation()
+        # buildWalls()*
+        - buildRoof()
     }
-    class ConcreteClass {
-        + step2()
+    class WoodenHouseBuilder {
+        # buildWalls()
     }
-    AbstractClass <|-- ConcreteClass
+    Builder <|-- WoodenHouseBuilder
 ```
 
 ```java
@@ -877,13 +948,18 @@ abstract class Builder {
     // Template Method
     public final void buildHouse() {
         buildFoundation();
-        buildWalls(); // Subclasses implement this
+        buildWalls(); // Subclasses implement this specific step
         buildRoof();
     }
     
     private void buildFoundation() { System.out.println("Foundation laid"); }
     protected abstract void buildWalls();
     private void buildRoof() { System.out.println("Roof built"); }
+}
+
+class WoodenHouseBuilder extends Builder {
+    @Override
+    protected void buildWalls() { System.out.println("Wooden walls built"); }
 }
 ```
 </details>
@@ -900,19 +976,30 @@ abstract class Builder {
 
 ```mermaid
 classDiagram
-    class Element {
-        <<interface>>
-        + accept(v: Visitor)
-    }
-    class Node {
-        + accept(v: Visitor)
-    }
     class Visitor {
         <<interface>>
-        + visitNode(n: Node)
+        + visitCar(Car)
+        + visitHouse(House)
     }
-    Element <|-- Node
-    Node ..> Visitor
+    class InsuranceAgent {
+        + visitCar(Car)
+        + visitHouse(House)
+    }
+    class ItemElement {
+        <<interface>>
+        + accept(Visitor)
+    }
+    class Car {
+        + accept(Visitor)
+    }
+    class House {
+        + accept(Visitor)
+    }
+    Visitor <|.. InsuranceAgent
+    ItemElement <|.. Car
+    ItemElement <|.. House
+    Car ..> Visitor
+    House ..> Visitor
 ```
 
 ```java
@@ -925,6 +1012,9 @@ interface ItemElement { void accept(Visitor visitor); }
 
 class Car implements ItemElement {
     public void accept(Visitor visitor) { visitor.visitCar(this); }
+}
+class House implements ItemElement {
+    public void accept(Visitor visitor) { visitor.visitHouse(this); }
 }
 
 class InsuranceAgent implements Visitor {
